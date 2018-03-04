@@ -1,0 +1,541 @@
+/*htmlayout编辑器*/
+import console;
+import win.ui;
+import win.ui.ctrl.scintilla;
+import win.ui.accelerator;
+import web.layout;
+import web.form;
+import fsys.dlg;
+import win.ui.menu;
+import web.layout.behavior.tabs;
+import web.layout.behavior.shellIcon;
+import web.layout.behavior.lightBoxDialog;
+import web.layout.behavior.collapsibleByIcon;
+import web.layout.behavior.grid;
+import web.layout.behavior.sortableGrid;
+import web.layout.behavior.scroller;
+import web.layout.behavior.dropdown; 
+import web.layout.behavior.popup;
+import web.layout.behavior.expandableList;
+import web.layout.behavior.collapsibleList;
+import web.layout.behavior.sizer;
+import web.layout.behavior.gripper;
+import web.layout.behavior.splitter;
+import web.layout.behavior.path;
+import web.layout.behavior.windowSizer;
+import web.layout.behavior.windowCommand;
+/*DSG{{*/
+mainForm = win.form(text="Htmlayout编辑器";right=861;bottom=546;bgcolor=12639424;parent=...)
+mainForm.add(
+bt_close={cls="button";text="X";left=839;top=2;right=857;bottom=20;bgcolor=255;color=-1;dr=1;dt=1;flat=1;z=1};
+hlView={cls="custom";text="hlView";left=5;top=0;right=450;bottom=518;ah=1;aw=1;border=1;db=1;dl=1;dt=1;edge=1;transparent=1;z=6};
+ieView={cls="custom";text="ieView";left=5;top=0;right=450;bottom=518;ah=1;aw=1;db=1;dl=1;dt=1;edge=1;transparent=1;z=2};
+splitter={cls="splitter";left=450;top=0;right=455;bottom=520;db=1;dt=1;frame=1;z=4};
+static={cls="static";left=5;top=521;right=857;bottom=544;db=1;dl=1;dr=1;edge=1;notify=1;transparent=1;z=3};
+tab={cls="tab";left=455;top=0;right=859;bottom=520;ah=1;aw=1;db=1;dr=1;dt=1;z=5}
+)
+/*}}*/
+
+/*html模板{{*/
+html=/*
+<html>
+<head>
+</head>
+<body>
+	<!--此处输入html代码-->
+</body>
+</html>
+*/
+/*}}*/
+wbLayout=web.layout(mainForm.hlView);//创建htmlayout预览窗口
+wb =web.form( mainForm.ieView,,,,true );//创建ie预览窗口
+mainForm.ieView.show( 0x0/*_SW_HIDE*/ );
+var activeView=1;//当前的预览模式，1：layout；2：IE
+
+//保存文件
+var save=function(page){
+    if(!page.scintilla.modify) return;
+	var filename=page.scintilla.filepath;	
+	var fo=io.splitpath(filename);
+	var gaibian=false;
+	if(fo.name="未命名"){
+		filename=fsys.dlg.save(filter,"保存到...");
+		if(filename)
+			gaibian=true;
+	}		
+	try{
+		var ret =string.save(filename,page.scintilla.text )
+		page.scintilla.setSavePoint(false);
+		
+		if(gaibian){
+			page.scintilla.filepath =filename;
+			mainForm.tab.setItemText(mainForm.tab.selIndex,io.splitpath(filename).file);
+			mainForm.static.text =filename;
+		}
+	}
+	catch(e){
+		mainForm.msgboxErr("文件保存失败："+filename);
+	}
+
+}
+//关闭全部文件
+var closeAll=function(){
+    var page;
+	var max =#mainForm.tab.items
+	
+	for(i=1;max;1){
+		page =mainForm.tab.items[1];
+		
+		if(page.scintilla.modify){
+			var ok =mainForm.msgbox('是否保存对"'+mainForm.tab.getItemText(1)+'"的修改?',"提示",0x3/*_MB_YESNOCANCEL*/)
+			select(ok) {
+				case 0x6/*_IDYES*/ {
+					save(page);
+				}
+				case 0x2/*_IDCANCEL*/ {
+					return 0;
+				}	
+			}	
+		}
+		mainForm.tab.remove(1);
+	}
+}
+
+
+/*创建菜单{{*/
+
+var checkID=2;
+//创建主菜单
+var menu= win.ui.menu(mainForm);
+//文件菜单
+var filemenu=win.ui.popmenu(mainForm);
+menu.add("文件",filemenu);
+var editmenu =win.ui.popmenu(mainForm);
+menu.add("编辑",editmenu);
+var encodingmenu = win.ui.popmenu(mainForm);
+menu.add("编码",encodingmenu);
+var previewmenu =win.ui.popmenu(mainForm);
+menu.add ("预览",previewmenu);
+menu.add("关于",function(){
+	win.msgbox('Htmlayout编辑器 \r\n Ver:2.0',"关于软件",null,mainForm.hwnd);
+}
+)
+//文件
+filemenu.addTable( {
+	
+	{"新建";{
+		{"新建Html文件(&1)";function(id){
+				var sci=addpage("未命名.html");
+				sci.text =html;//载入html模板
+				
+				//sci.setSavePoint(false);
+				mainForm.static.text ="未命名.html";
+				sci.setFocus();
+				encodingmenu.check(2,true)
+			}
+		};
+		{"新建CSS文件(&2)";function(id){
+				var sci=addpage("未命名.css");
+								
+				mainForm.static.text ="未命名.css";
+				encodingmenu.check(2,true)
+				sci.setFocus();
+			}
+		};
+		{"新建其它文件(&3)";function(id){
+				var sci=addpage("未命名");
+												
+				mainForm.static.text ="未命名";
+				encodingmenu.check(2,true)
+				sci.setFocus();
+			}
+		}
+	}};
+	
+	{ "打开";  function(id){
+		var path =fsys.dlg.open("Html文件 *.html|*.htm*|CSS文件 *.css|*.css|所有文件 *.*|*.*|");
+		if(path){
+			var code,cp=string.load(path);
+			var sci=addpage(path)
+			sci.text=code;
+			sci.setSavePoint(false);		
+			mainForm.static.text =path;
+			
+			checkID =1;
+		}
+	} };
+	
+	{"保存";function(id){
+		var page =mainForm.tab.items[mainForm.tab.selIndex];
+		save(page);
+	}};
+	{"另存";function(id){
+		var page =mainForm.tab.items[mainForm.tab.selIndex];
+		var filename;
+		var fo=io.splitpath(page.scintilla.filepath);
+		var filename = fsys.dlg.save(null,"另存到...");
+		if(filename){
+			try{
+				string.save(filename,page.scintilla.text )
+				page.scintilla.filepath =filename;
+				mainForm.tab.setItemText(mainForm.tab.selIndex,fo.file);
+				mainForm.static.text =filename;
+				page.scintilla.setSavePoint(false);
+				
+			}catch(e){
+				mainForm.msgbox("另存文件失败: "+filename)
+			}
+		}
+	}};
+	{"全部关闭";closeAll};
+	{"退出程序"; function(id){  
+		mainForm.close() 
+ 	} };
+} )
+//编辑
+editmenu.addTable( {
+	{ "撤销 ctrl+Z";  function(id){
+		mainForm.tab.items[mainForm.tab.selIndex].scintilla.undo();
+		} };
+	{"重做 ctrl+Y";function(id){
+		mainForm.tab.items[mainForm.tab.selIndex].scintilla.redo();	
+		}};
+	{ /*分隔线*/ }
+	{"剪切 ctrl+X";function(id){
+		mainForm.tab.items[mainForm.tab.selIndex].scintilla.cut();
+		}};
+	{"复制 ctrl+C";function(id){
+		mainForm.tab.items[mainForm.tab.selIndex].scintilla.copy();
+		}};
+	{ "粘贴 ctrl+V"; function(id){  
+		mainForm.tab.items[mainForm.tab.selIndex].scintilla.paste();
+		}};
+	{"删除 delete";function(id){
+		mainForm.tab.items[mainForm.tab.selIndex].scintilla.clear();
+		}};
+	{"删除一行 ctrl+L";function(id){
+		mainForm.tab.items[mainForm.tab.selIndex].scintilla.sendEditor(2337/*_SCI_LINECUT*/,0,0);
+		}};
+	{/*分隔线*/}
+	{"选择全部ctrl+A";function(id){
+		mainForm.tab.items[mainForm.tab.selIndex].scintilla.selectAll();
+		}}
+	
+} )
+
+//编码菜单
+encodingmenu.addTable( {
+	{ "GBK 编码";  function(id){
+		mainForm.tab.items[mainForm.tab.selIndex].scintilla.codepage =936;
+		encodingmenu.check(checkID,false);
+		encodingmenu.check(1);
+		checkID=1;	
+		} };
+	{ "UTF-8 编码";  function(id){
+		mainForm.tab.items[mainForm.tab.selIndex].scintilla.codepage =65001;
+		encodingmenu.check(checkID,false);
+		encodingmenu.check(2);
+		checkID=2;	
+		} };
+	{ "BIG5 编码";  function(id){
+		mainForm.tab.items[mainForm.tab.selIndex].scintilla.codepage =950;
+		encodingmenu.check(checkID,false);
+		encodingmenu.check(3);
+		checkID=3;	
+		} };
+} )
+//预览菜单
+previewmenu.addTable( {
+	{ "layout预览";  function(id){
+		mainForm.ieView.show( 0x0/*_SW_HIDE*/ );
+		mainForm.hlView.show(  );
+		activeView=1;
+		previewmenu.check(1);
+		previewmenu.check(2,false)
+		
+		var dir=io.splitpath(mainForm.tab.items[mainForm.tab.selIndex].scintilla.filepath).dir
+		wbLayout.write(mainForm.tab.items[mainForm.tab.selIndex].scintilla.text,dir)
+	} };
+	{ "IE预览"; function(id){  
+		mainForm.ieView.show();
+		mainForm.hlView.show( 0x0/*_SW_HIDE*/ );
+		activeView=2;
+		previewmenu.check(2);
+		previewmenu.check(1,false)
+		
+		var dir=string.replace(io.splitpath(mainForm.tab.items[mainForm.tab.selIndex].scintilla.filepath).dir,"@\","/");
+		var html=mainForm.tab.items[mainForm.tab.selIndex].scintilla.text
+		var baseURL ='<base href="'+dir+'"/>';
+		var str,i =string.replace(html,"@@<head>","\1"++baseURL,1);
+		if(!i)
+			str =string.replace(html,"(<@@<html@>.*?>)","\1"++baseURL++"</head>",1);
+		wb.write(str);
+ 	} };
+} )
+previewmenu.check(activeView);
+/*}}*/
+
+//关闭文件
+mainForm.bt_close.oncommand = function(id,event){
+	if(!mainForm.tab.selIndex)  return ; 
+	var page =mainForm.tab.items[mainForm.tab.selIndex];
+	if(page.scintilla.modify){
+		var ok=mainForm.msgbox("当前文件未保存，你是否想保存对此文件的修改？","提示",0x4/*_MB_YESNO*/);
+		if(ok =6)
+			filemenu.click( 3 )
+	}
+	mainForm.tab.remove(mainForm.tab.selIndex);
+	
+}
+
+//初始化分隔条
+mainForm.splitter.split(mainForm.hlView,mainForm.tab);
+
+//读取配置文件
+var s =string.load("\lexer.table");
+if(!s){
+  mainForm.msgbox('找不到语法配置文件"lexer.table"')
+  win.quitMessage();
+} 
+var cfg =eval(s);
+/*scintilla公用onnotify{{*/
+
+var scionnotify =function(sci,id,code,ptr){
+	
+	var notify = sci.SCNotification();
+	raw.convert(ptr, notify);
+	
+	select (notify.nmhdr.code) {
+		case 2010/*_SCN_MARGINCLICK*/ {
+			var line = sci.lineFromPosition(notify.position);
+			sci.sendEditor(2231/*_SCI_TOGGLEFOLD*/, line);
+		}
+		case 2008/*_SCN_MODIFYED*/{
+			if(sci.modify){
+				mainForm.tab.setItemText(mainForm.tab.selIndex,io.splitpath(sci.filepath).file+" * ");
+				}
+			else {
+				mainForm.tab.setItemText(mainForm.tab.selIndex,io.splitpath(sci.filepath).file);
+			}
+			
+			if(sci.lexer==4)//html
+			{
+				if(activeView=1)
+					wbLayout.write(mainForm.tab.items[mainForm.tab.selIndex].scintilla.text,io.splitpath(sci.filepath).dir)
+				else {
+					var html=sci.text
+					var path=string.replace(io.splitpath(sci.filepath).dir,"@\","/");
+					var baseURL ='<head>\n<base href="'+path+'"/>';
+					var str,i =string.replace(html,"@@<head>",baseURL,1);
+					if(!i)
+						str =string.replace(html,"(<@@<html@>.*?>)","\1"++baseURL++"</head>",1);
+
+					wb.write(str);
+				}
+				
+			}	
+		}
+		case 2005/*_SCN_KEY*/{
+			
+			
+			}
+			
+		// 以下处理自动缩进
+		case 2001/*_SCN_CHARADDED*/ {
+			lastCh = notify.ch;
+			
+		}
+		case 2007/*_SCN_UPDATEUI*/ {
+			if (lastCh) {
+				var pos = sci.currentPos;
+				var line = sci.lineFromPosition(pos);
+				// 如果最后输入的字符是 }
+				if (lastCh == '}'#) {
+					var ch = sci.getCharAt(pos - 2);
+					if (ch == ' '# || ch == '\t'#) {
+						var wordStartPos = sci.sendEditor(2266/*_SCI_WORDSTARTPOSITION*/, pos - 1);
+						var posLine = sci.positionFromLine(line);
+						if (wordStartPos == posLine) {
+							var othpos = sci.sendEditor(2353/*_SCI_BRACEMATCH*/, pos - 1); //得到对应的左括号所在的位置
+                    		var othline = sci.lineFromPosition(othpos);  //左括号所在行
+                    		var nIndent = sci.sendEditor(2127/*_SCI_GETLINEINDENTATION*/, othline);//左括号所在行的缩进值
+                    		// 替换右括号前面的空白字符，使之与左括号缩进一致
+                    		sci.targetStart = wordStartPos;
+                    		sci.targetEnd = pos - 1;
+                    		sci.sendEditor(2194/*_SCI_REPLACETARGET*/, nIndent, string.repeat(1024, " "));
+						}
+					}
+				}
+				// 如果最后输入的字符是回车
+				if (lastCh == '\n'#) {
+					if(line > 0) {
+                    	// 得到上一行缩进设置
+                    	var nIndent = sci.sendEditor(2127/*_SCI_GETLINEINDENTATION*/, line - 1);
+                    	// 查找上一行最后一个有效字符（非空白字符）
+                    	var nPrevLinePos = sci.sendEditor(2167/*_SCI_POSITIONFROMLINE*/, line - 1);
+                    	var c = ' '#;
+                    	for (p = pos - 3; nPrevLinePos; -1) {
+                    		c = sci.getCharAt(p);
+                    		if (c != ' '# && c != '\t'#)
+                    			break;
+                    	}
+                    	// 如果是左括号，就多缩进四格
+                    	if(c == '{'#)
+                    		nIndent += 4;
+                    	sci.selText = string.repeat(nIndent, " ");
+                	}
+				}
+				lastCh = 0;
+			}
+		}
+		
+	}
+}
+/*}}*/
+
+/*addpage在TAB中添加一个新的页{{*/
+
+addpage =function(filepath){
+	var fo=io.splitpath(filepath);
+	var page =mainForm.tab.add(text =fo.file;bottom=520;right=404);
+	page.add(scintilla={ dr=1;dl=1;dt=1;db=1;bottom=520;right=404;left=0;top=0;z=1;transparent=1;edge=1;cls="scintilla" });
+	var sci =page.scintilla;
+	
+	sci.filepath= filepath;
+		
+	
+	sci.codepage =65001;//默认utf-8
+	sci.tabWidth=3;
+	/*设置边栏*/
+	sci.setMarginType(0,1/*_SC_MARGIN_NUMBER*/);//边栏0，数字型
+	sci.setMarginWidth(0,20);
+	sci.setMarginType(1,0/*_SC_MARGIN_SYMBOL*/);//边栏1，符号型
+	sci.setMarginWidth(1,15);
+	sci.setMarginSensitive(1,true);//边栏1可以接收鼠标事件
+	sci.sendEditor(2244/*_SCI_SETMARGINMASKN*/,1,0xFE000000/*_SC_MASK_FOLDERS*/);//边栏1的符号掩码(折叠）
+	/*设置折叠样式*/
+	sci.sendEditor(2132/*_SCI_SETINDENTATIONGUIDES*/,3/*_SC_IV_LOOKBOTH*/);//显示缩进线
+	sci.sendEditor(2040/*_SCI_MARKERDEFINE*/,30/*_SC_MARKNUM_FOLDER*/,12);
+	sci.sendEditor(2040,31/*_SC_MARKNUM_FOLDEROPEN*/,14);
+	sci.sendEditor(2040,25/*_SC_MARKNUM_FOLDEREND*/,13);
+	sci.sendEditor(2040,26/*_SC_MARKNUM_FOLDEROPENMID*/,15);
+	sci.sendEditor(2040,27/*_SC_MARKNUM_FOLDERMIDTAIL*/,11);
+	sci.sendEditor(2040,29/*_SC_MARKNUM_FOLDERSUB*/,9);
+	sci.sendEditor(2040,28/*_SC_MARKNUM_FOLDERTAIL*/,10);
+	//设置折叠符号颜色
+	sci.sendEditor(2042/*_SCI_MARKERSETBACK*/,27/*_SC_MARKNUM_FOLDERMIDTAIL*/,0xcccc00);
+	sci.sendEditor(2042,28,0xcccc00);
+	sci.sendEditor(2042,29,0xcccc00);
+	sci.sendEditor(2042,26,0xcccc00);
+	sci.sendEditor(2042,25,0xcccc00);
+	//在折叠部分下面画 一条线
+	sci.sendEditor(2233/*_SCI_SETFOLDFLAGS*/,0x0010/*_SC_FOLDFLAG_LINEAFTER_CONTRACTED*/);
+	sci.sendEditor(2359/*_SCI_SETMODEVENTMASK*/,0x1/*_SC_MOD_INSERTTEXT*/|0x2/*_SC_MOD_DELETETEXT*/);
+	//屏蔽一下功能键
+	sci.sendEditor(2071/*_SCI_CLEARCMDKEY*/,'F'#+(2/*_SCMOD_CTRL*/<<16),2172/*_SCI_NULL*/);
+	sci.sendEditor(2071/*_SCI_CLEARCMDKEY*/,'H'#+(2/*_SCMOD_CTRL*/<<16),2172/*_SCI_NULL*/);
+	sci.sendEditor(2071/*_SCI_CLEARCMDKEY*/,'J'#+(2/*_SCMOD_CTRL*/<<16),2172/*_SCI_NULL*/);
+	sci.sendEditor(2071/*_SCI_CLEARCMDKEY*/,'K'#+(2/*_SCMOD_CTRL*/<<16),2172/*_SCI_NULL*/);
+	sci.sendEditor(2071/*_SCI_CLEARCMDKEY*/,'B'#+(2/*_SCMOD_CTRL*/<<16),2172/*_SCI_NULL*/);
+	sci.sendEditor(2071/*_SCI_CLEARCMDKEY*/,'N'#+(2/*_SCMOD_CTRL*/<<16),2172/*_SCI_NULL*/);
+	sci.sendEditor(2071/*_SCI_CLEARCMDKEY*/,'M'#+(2/*_SCMOD_CTRL*/<<16),2172/*_SCI_NULL*/);
+	sci.sendEditor(2071/*_SCI_CLEARCMDKEY*/,'S'#+(2/*_SCMOD_CTRL*/<<16),2172/*_SCI_NULL*/);
+	sci.sendEditor(2071/*_SCI_CLEARCMDKEY*/,'W'#+(2/*_SCMOD_CTRL*/<<16),2172/*_SCI_NULL*/);
+	sci.sendEditor(2071/*_SCI_CLEARCMDKEY*/,'E'#+(2/*_SCMOD_CTRL*/<<16),2172/*_SCI_NULL*/);
+	sci.sendEditor(2071/*_SCI_CLEARCMDKEY*/,'R'#+(2/*_SCMOD_CTRL*/<<16),2172/*_SCI_NULL*/);
+	sci.sendEditor(2071/*_SCI_CLEARCMDKEY*/,'T'#+(2/*_SCMOD_CTRL*/<<16),2172/*_SCI_NULL*/);
+	sci.sendEditor(2071/*_SCI_CLEARCMDKEY*/,'O'#+(2/*_SCMOD_CTRL*/<<16),2172/*_SCI_NULL*/);
+	sci.sendEditor(2071/*_SCI_CLEARCMDKEY*/,'P'#+(2/*_SCMOD_CTRL*/<<16),2172/*_SCI_NULL*/);
+	
+	//配色
+	
+	sci.setStyle(32/*_STYLE_DEFAULT*/,"宋体",10,false,false,false,cfg.defaultColor.fore,cfg.defaultColor.back);//设置默认风格
+	sci.sendEditor(2069/*_SCI_SETCARETFORE*/,cfg.defaultColor.fore);//光标颜色
+	select(fo.ext) {
+		case ".html",".htm" {
+			sci.lexer=4/*_SCLEX_HTML*/;//选定词法分析器
+			sci.styleBits =sci.styleBitsNeeded;//设置风格位
+			//设置自动折叠
+			sci.sendEditor(4004/*_SCI_SETPROPERTY*/,"fold","1");
+			sci.sendEditor(4004,"fold.html","1");
+			//设置关键字
+			for(k,v in cfg.html.keyword){
+				if(v!=""){
+					sci.setKeywords(cfg.html.const[k],v);
+					}
+			}
+			///////Html配色///////////
+			for(k,v in cfg.html.color){
+				if(v !=""){
+					table.mix(v,cfg.defaultColor)
+					sci.setStyle(cfg.html.const[k],v);
+					}
+			}
+		}
+		case".css" {
+			sci.lexer=38/*_SCLEX_CSS*/;
+			sci.styleBits =sci.styleBitsNeeded;//设置风格位
+			//设置自动折叠
+			sci.sendEditor(4004/*_SCI_SETPROPERTY*/,"fold","1");
+			//设置关键字
+			for(k,v in cfg.css.keyword){
+				if(v!="")	
+					sci.setKeywords(cfg.css.const[k],v);
+			}
+			///////Html配色///////////
+			
+			for(k,v in cfg.css.color){
+				if(v !=""){
+					table.mix(v,cfg.defaultColor)
+					sci.setStyle(cfg.css.const[k],v);
+				}
+			}
+		}
+		else{
+			sci.setStyle(0,cfg.defaultColor);
+		}	
+	}
+	sci.onnotify =function(id,code,ptr){
+		scionnotify(sci,id,code,ptr);
+	}
+	//窗口快捷键
+	var accelerator=win.ui.accelerator({
+		{ 
+        	ctrl = true; vkey = 'S'#; 
+        	oncommand = function(){
+        		filemenu.click( 3 )//保存
+        	}
+    	};  
+    
+	},page)
+return sci; 	
+
+}
+/*}}*/
+
+mainForm.hlView.wndproc = function(hwnd,message,wParam,lParam){ 
+	if(message =0x5/*_WM_SIZE*/)
+		mainForm.ieView.left =mainForm.hlView.left;
+}
+mainForm.tab.onnotify = function(id,code,ptr){
+	if(code=0xFFFFFDD9/*_TCN_SELCHANGE*/){
+		
+		mainForm.static.text =mainForm.tab.items[mainForm.tab.selIndex].filepath;
+	}
+}
+
+mainForm.tab.wndproc = function(hwnd,message,wParam,lParam){
+	if(message=0x5/*_WM_SIZE*/){
+		mainForm.tab.adjustRect();
+	}
+	//无返回值则继续调用默认回调函数
+}
+
+mainForm.onClose = function(hwnd,message,wParam,lParam){
+    return closeAll()
+    
+}
+
+
+mainForm.show() 
+win.loopMessage();

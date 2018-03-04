@@ -1,0 +1,81 @@
+{
+//默认的前景色和背景色
+defaultColor={fore=0xFEFEFE;back=0x1}
+//html文件的关键字和配色
+html={
+    keyword={
+	["HTML元素和属性"] ="a abbr acronym address applet area b base basefont do big blockquote body br button caption center cite code col colgroup dd del dfn dir div dl dt em fieldset font form frame frameset h1 h2 h3 h4 h5 h6 head hr html i iframe img input ins isindex kbd label legend li link map menu meta noframes noscript object ol optgroup option p param pre q s samp script select small span strike strong style sub sup table tbody td textarea tfoot th thead title tr tt u ul var xml xmlns abbr accept-charset accept accesskey action align alink alt archive axis background bgcolor border cellpadding cellspacing char charoff charset checked cite class classid clear codebase codetype color cols colspan compact content coords data datafld dataformatas datapagesize datasrc datetime declare defer dir disabled enctype event face for frame frameborder headers height href hreflang hspace http-equiv id ismap label lang language leftmargin link longdesc marginwidth marginheight maxlength media method multiple name nohref noresize noshade nowrap object onblur onchange onclick ondblclick onfocus onkeydown onkeypress onkeyup onload onmousedown onmousemove onmouseover onmouseout onmouseup onreset onselect onsubmit onunload profile prompt readonly rel rev rows rowspan rules scheme scope selected shape size span src standby start style summary tabindex target text title topmargin type usemap valign value valuetype version vlink vspace width text password checkbox radio submit reset file hidden image ^data- address article aside audio base canvas command details datalist embed figure figcaption footer header hgroup keygen mark menu meter nav output progress ruby rt rp section source time video wbr async autocomplete autofocus contenteditable contextmenu draggable form formaction formenctype formmethod formnovalidate formtarget list manifest max min novalidate pattern placeholder required reversed role sandbox scoped seamless sizes spellcheck srcdoc step ";
+	["JavaScript关键字"] ="";
+	["VBScript关键字"] ="";
+	["Python关键字"] ="";
+	["PHP关键字"] ="" ;
+	["SGML和DTD关键字"] ="" 
+	};
+    color={
+	文本 ={};
+	标签={fore=0x000080};
+        未识别标签={fore=0xff0000};
+	属性={fore=0x008080};
+	未识别属性={fore=0xff0000};
+	实体字符={fore=0x800080};
+	script={fore=0x000080};
+	双引号中的字符串={fore=0xffcc};
+	单引号中的字符串={fore=0xffcc};
+	注释={fore=0xff00};
+	["jsp注释"]={fore=0xff00};
+	}
+    const={["HTML元素和属性"] =0;["JavaScript关键字"] =1;["VBScript关键字"] =2;	["Python关键字"] =3;["PHP关键字"] =4 ;["SGML和DTD关键字"] =5;文本 =0;
+	标签=1;
+    未识别标签=2;
+	属性=3;
+	未识别属性=4;
+	实体字符=10;
+	script=14;
+	双引号中的字符串=6;
+	单引号中的字符串=7;
+	注释=9;
+	["jsp注释"]=20} 
+}
+css={
+    keyword={
+	css1="color background-color background-image background-repeat background-attachment background-position background font-family font-style font-variant font-weight font-size font word-spacing letter-spacing text-decoration vertical-align text-transform text-align text-indent line-height margin-top margin-right margin-bottom margin-left margin padding-top padding-right padding-bottom padding-left padding border-top-width border-right-width border-bottom-width border-left-width border-width border-top border-right border-bottom border-left border border-color border-style width height float clear display white-space list-style-type list-style-image list-style-position list-style";
+	
+	伪类="link active visited first-child focus hover lang left right first empty enabled disabled checked not root target only-child last-child nth-child nth-last-child first-of-type last-of-type nth-of-type nth-last-of-type only-of-type valid invalid required optional first-letter first-line before after";
+	
+	css2="border-top-color border-right-color border-bottom-color border-left-color border-color border-top-style border-right-style border-bottom-style border-left-style border-style top right bottom left position z-index direction unicode-bidi min-width max-width min-height max-height overflow clip visibility content quotes counter-reset counter-increment marker-offset size marks page-break-before page-break-after page-break-inside page orphans widows font-stretch font-size-adjust unicode-range units-per-em src panose-1 stemv stemh slope cap-height x-height ascent descent widths bbox definition-src baseline centerline mathline topline text-shadow caption-side table-layout border-collapse border-spacing empty-cells speak-header cursor outline outline-width outline-style outline-color volume speak pause-before pause-after pause cue-before cue-after cue play-during azimuth elevation speech-rate voice-family pitch pitch-range stress richness speak-punctuation speak-numeral";
+	
+	css3="background-size border-radius border-top-right-radius border-bottom-right-radius border-bottom-left-radius border-top-left-radius box-shadow columns column-width column-count column-rule column-gap column-rule-color column-rule-style column-rule-width resize opacity word-wrap";
+	
+	伪元素="first-letter first-line before after selection";
+	扩展标识符="^-moz- ^-webkit- ^-o- ^-ms-";
+	扩展伪类="";
+	扩展伪元素=""
+	}
+	color={
+	选择符={fore=0xff0000};
+	类={fore=0xff0000};
+	伪类={fore=0x0f0000};
+	未知伪类={fore=0x666666};
+	分隔符={fore=0xff0000};
+	标识符={fore=0xff00ff};
+	未知标识符={fore=0x666666};
+	值={fore=0x333333};
+	注释={fore=0x008800};
+	ID={fore=0xff0000};
+	["important"]={fore=0xff0000};
+	["import"]={fore=0x000088};
+	双引号中的文本={fore=0x000088};
+	单引号中的文本={fore=0x000088};
+	标识符2={fore=0xff00ff};
+	属性={fore=0x000088};
+	标识符3={fore=0xff00ff};
+	伪元素={fore=0xff0000};
+	扩展标识符={fore=0xff00ff};
+	扩展伪类={fore=0xff0000};
+	扩展伪元素={fore=0xff0000}
+	}
+	
+	const={css1=0;伪类=1;css2=2;css3=3;伪元素=4;扩展标识符=5;扩展伪类=6;扩展伪元素=7;	选择符=1;类=2;伪类=3;未知伪类=4;分隔符=5;标识符=6;未知标识符=7;值=8;注释=9;ID=10;["important"]=11;["import"]=12;双引号中的文本=13;单引号中的文本=14;	标识符2=15;	属性=16;标识符3=17;伪元素=18;扩展标识符＝20;扩展伪类=21;扩展伪元素=22
+	}
+}
+}
